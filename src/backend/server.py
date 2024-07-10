@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from helpers.backend_router import functions_router
 
 app = FastAPI(
-    title="Robomentor Service v0.1.0",
-    summary="Platform Backend Endpoints",
+    title="TalkYou Backend Server v0.1.0",
+    summary="TalkYou Application Endpoints",
     version="0.1.0",
 )
 
