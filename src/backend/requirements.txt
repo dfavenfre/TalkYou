@@ -9,7 +9,6 @@ pydantic
 python-dotenv
 tiktoken
 redis
-pycognito
 pydub
 pypdf
 fpdf
