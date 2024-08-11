@@ -43,7 +43,7 @@ class FetchTranscriptionModel(BaseModel):
 
 def check_transcription(
         video_url: Union[str, AnyStr]
-) -> WebElement | bool:
+) -> bool:
     """
     Description:
     Checks if there is 'transcription' element in the provided video URL.
@@ -77,19 +77,18 @@ def check_transcription(
 
         # Wait for the transcription element to become visible
         transcription_element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located(
-                (
-                    By.CSS_SELECTOR, 'div#columns div.style-scope.ytd-watch-flexy > div#below'
-                )
-            )
+            EC.visibility_of_element_located((
+                By.XPATH,
+                "//div[@id='items'][1]//ytd-video-description-transcript-section-renderer[contains(text(), 'Transcript')]"
+            ))
         )
 
-        if transcription_element is not None:
-            driver.save_screenshot('backend_screenshot.png')
-            return transcription_element
+        if isinstance(transcription_element, WebElement):
+            print(transcription_element)
+            return True
 
         else:
-            driver.save_screenshot('backend_screenshot.png')
+            print(transcription_element)
             return False
 
     except Exception as err:

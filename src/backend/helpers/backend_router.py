@@ -47,9 +47,8 @@ async def fetch_transcription_element(
     try:
         found_transcription = check_transcription(payload.video_url)
 
-        if found_transcription is not None:
-            data = found_transcription.json()
-            return data
+        if found_transcription:
+            return found_transcription
 
         return found_transcription
 
