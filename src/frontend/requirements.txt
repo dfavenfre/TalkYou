@@ -1,7 +1,5 @@
-streamlit==1.36.0
+streamlit==1.37.0
 extra_streamlit_components
-streamlit-mic-recorder==0.0.8
-streamlit-audiorecorder
 st-pages
 streamlit-extras
 redis
