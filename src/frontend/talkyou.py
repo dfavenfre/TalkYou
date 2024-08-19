@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 import asyncio
-from helpers.helper_functions import check_application, check_transcription
+from elements.helper_functions import check_application, check_transcription
 
 st.set_page_config(
     page_title="TalkYou"
@@ -26,13 +26,13 @@ with st.container(border=True, height=400):
                 label="Check Transcription",
                 key="transcriptionKey"
         ):
-            if len(video_url) >= 10:
+            if len(video_url) >= 10 and "youtube" in video_url:
                 video_transcription = asyncio.run(check_transcription(video_url))
                 if video_transcription:
-                    st.write(video_transcription)
                     st.success("Found Transcription")
+
                 else:
-                    st.write(video_transcription)
                     st.error(f"No Transcription found")
-            elif len(video_url) < 10:
-                st.warning("Please add a video URL before proceeding")
+
+            elif len(video_url) < 10 and not "youtube" in video_url:
+                st.warning("Please add a valid Youtube video URL before proceeding")

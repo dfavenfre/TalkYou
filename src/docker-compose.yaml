@@ -2,6 +2,7 @@ version: '3.11'
 services:
   frontend:
     build: frontend
+    image: talkyou-frontend
     ports:
       - "8501:8501"
     depends_on:
@@ -12,9 +13,18 @@ services:
     networks:
       - app
     container_name: talkyou-frontend
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+        reservations:
+          cpus: "0.5"
+          memory: "1G"
 
   backend:
     build: backend
+    image: talkyou-backend
     ports:
       - "8000:8000"
     volumes:
@@ -23,6 +33,14 @@ services:
     networks:
       - app
     container_name: talkyou-backend
+    deploy:
+      resources:
+        limits:
+          cpus: "3"
+          memory: "5G"
+        reservations:
+          cpus: "2"
+          memory: "3G"
 
 networks:
   app:
