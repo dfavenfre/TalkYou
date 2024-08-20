@@ -2,7 +2,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from dotenv import load_dotenv
 import os
 
@@ -33,4 +33,9 @@ gpt_3_5 = ChatOpenAI(
     temperature=1e-10,
     max_tokens=1000,
     model_name="gpt-3.5-turbo"
+)
+
+text_embedding_v3_small = OpenAIEmbeddings(
+    openai_api_key=os.environ.get("OPENAI_API_KEY"),
+    model="text-embedding-3-small"
 )

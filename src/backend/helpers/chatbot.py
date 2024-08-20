@@ -16,7 +16,7 @@ from helpers.agent_states import (
     check_transcription_element,
     download_with_pytube,
     extract_transcription,
-    create_vectorstore,
+    init_vectorstore,
     selenium_or_pytube,
     scrape_or_download
 )
@@ -27,7 +27,7 @@ workflow.add_node("check_video_length", check_video_length)
 workflow.add_node("check_transcription", check_transcription_element)
 workflow.add_node("download_with_pytube", download_with_pytube)
 workflow.add_node("extract_transcription", extract_transcription)
-workflow.add_node("create_vectorstore", create_vectorstore)
+workflow.add_node("create_vectorstore", init_vectorstore)
 
 workflow.add_edge(START, "check_video_length")
 workflow.add_conditional_edges(

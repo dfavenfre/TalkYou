@@ -2,7 +2,8 @@ from helpers.helper_functions import (
     FetchTranscriptionModel,
     check_transcription,
     FetchVideoLengthModel,
-    scrape_video_length
+    scrape_video_length,
+    scrape_transcription
 )
 from helpers.chatbot import chatbot
 from typing import (
@@ -86,6 +87,32 @@ async def fetch_transcription_element(
 
 
 @functions_router.post(
+    path="/fetch/video_transcription",
+    summary='Scrapes full video transcription',
+    status_code=status.HTTP_202_ACCEPTED
+)
+async def fetch_video_transcription(
+        video_url: str = Form(
+            ...,
+            description="URL of the video that you want to scrape the transcription of",
+            min_length=10,
+            max_length=100,
+            json_schema_extra={
+                "example": "https://www.youtube.com/watch?v=bG4VYwFnU8k&t=5s"
+            }
+        )
+) -> Dict[str, str]:
+    try:
+        full_transcription = scrape_transcription(video_url)
+
+        if full_transcription is not None:
+            return full_transcription
+
+    except Exception as err:
+        raise HTTPException(status_code=404, detail=str(err))
+
+
+@functions_router.post(
     path="/process/converse_with_agent",
     summary='Endpoint for chatting with our agent',
     status_code=status.HTTP_202_ACCEPTED
@@ -97,23 +124,13 @@ async def converse_with_agent(
             min_length=10,
             max_length=100,
             json_schema_extra={
-                "example": "https://www.youtube.com/watch?v=56176516"
+                "example": "https://www.youtube.com/watch?v=bG4VYwFnU8k&t=5s"
             }
-        ),
-        chat_message: Optional[str] = Form(
-            default=None,
-            description="chat message received from the user",
-            min_length=5,
-            max_length=250,
-            json_schema_extra={
-                "example": "How can I tie a tie?"
-            }
-        ),
-) -> str:
+        )
+):
     try:
         payload = {
-            "video_url": video_url,
-            "chat_message": chat_message
+            "video_url": video_url
         }
 
         with tracing_v2_enabled(project_name="TalkYou"):
