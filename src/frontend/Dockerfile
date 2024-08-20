@@ -1,7 +1,6 @@
 FROM python:3.11-slim
 
 RUN apt update
-RUN apt install ffmpeg -y
 
 ENV REDIS_HOST=localhost \
     REDIS_PORT=6379dfaenfre
