@@ -75,8 +75,8 @@ def scrape_video_length(url):
         print(f"TimeoutException: {e}")
         return False
 
-    finally:
-        driver.close()
+    # finally:
+    #     driver.close()
 
 
 def check_transcription(video_url: str) -> bool:
@@ -116,8 +116,8 @@ def check_transcription(video_url: str) -> bool:
         print(f"TimeoutException: {e}")
         return False
 
-    finally:
-        driver.close()
+    # finally:
+    #     driver.close()
 
 
 def scrape_transcription(video_url: str) -> Dict[str, str]:
@@ -173,8 +173,8 @@ def scrape_transcription(video_url: str) -> Dict[str, str]:
     except TimeoutException as err:
         print(f"TimeoutException: {err}")
 
-    finally:
-        driver.close()
+    # finally:
+    #     driver.close()
 
 
 def scroll_down(engine: webdriver, scrolling_by: Tuple[int, int]):

@@ -101,7 +101,7 @@ def extract_transcription(state):
     video_url = state["video_url"]
 
     full_transcription = transcription_scrapper._run(video_url)
-    parsed_transcription = "".join(full_transcription.values())
+    parsed_transcription = ". ".join(full_transcription.values())
     return {
         "transcription_text": parsed_transcription,
         "full_transcription": full_transcription

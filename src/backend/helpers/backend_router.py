@@ -76,7 +76,7 @@ async def fetch_transcription_element(
             return found_transcription
 
         else:
-            raise HTTPException(status_code=404, detail="---CHECK THE RETURNED VALUE---")
+            return False
 
     except Exception as err:
         print(f"Error occurred: {err}")
