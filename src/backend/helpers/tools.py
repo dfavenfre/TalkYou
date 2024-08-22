@@ -1,3 +1,4 @@
+from langchain_community.vectorstores import FAISS
 from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from webdriver_manager.chrome import ChromeDriverManager
@@ -8,11 +9,23 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException
 from langchain.tools import BaseTool, StructuredTool, tool
-from helpers.constants import service, options, driver
+from helpers.constants import (
+    service,
+    options,
+    driver,
+    request_identification_prompt_template,
+    rag_prompt_template,
+    gpt_4o_mini,
+    gpt_3_5,
+    text_embedding_v3_small
+)
 from helpers.helper_functions import (
     FetchTranscriptionModel,
     FetchVideoLengthModel,
-    ScrapeTranscriptions
+    ScrapeTranscriptions,
+    RequestIdentifierModel,
+    RequestParser,
+    RagToolModel
 )
 
 # Memory
@@ -207,10 +220,71 @@ class TranscriptionScrapperTool(BaseTool):
         except TimeoutException as err:
             print(f"TimeoutException: {err}")
 
-        finally:
-            driver.close()
+
+
+class RequestIdentifierTool(BaseTool):
+    name: str = "IdentifyRequests"
+    description: str = "Identifies request as either 'text' or 'image' "
+    args_schema: Type[BaseModel] = RequestIdentifierModel
+
+    def _run(
+            self,
+            chat_message: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> str:
+        output_parser = PydanticOutputParser(pydantic_object=RequestParser)
+        identification_prompt = PromptTemplate(
+            template=request_identification_prompt_template,
+            input_variables=["request"],
+            partial_variables={"format_instructions": output_parser.get_format_instructions()}
+        )
+        identification_chain = (
+                identification_prompt
+                | gpt_4o_mini
+                | output_parser
+        )
+
+        with tracing_v2_enabled(project_name="TalkYou"):
+            response = identification_chain.invoke({"request": chat_message})
+
+        return response
+
+
+class RagTool(BaseTool):
+    name: str = "RagTool"
+    description: str = "RAG tool for Q&A with Youtube video's"
+    args_schema: Type[BaseModel] = RagToolModel
+
+    def _run(
+            self,
+            chat_message: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> str:
+        retriever = FAISS.load_local(
+            folder_path="./faiss_vectorstore",
+            embeddings=text_embedding_v3_small,
+            allow_dangerous_deserialization=True
+        )
+        # TODO-> Add memory
+        rag_prompt = PromptTemplate.from_template(rag_prompt_template)
+        rag_chain = (
+                {
+                    "question": itemgetter("question"),
+                    "context": itemgetter("question") | retriever.as_retriever()
+                }
+                | rag_prompt
+                | gpt_4o_mini
+                | StrOutputParser()
+        )
+
+        with tracing_v2_enabled(project_name="TalkYou"):
+            response = rag_chain.invoke({"question": chat_message})
+
+        return response
 
 
 transcription_checker = TranscriptionTool()
 video_length_checker = VideoLengthTool()
 transcription_scrapper = TranscriptionScrapperTool()
+request_identifier = RequestIdentifierTool()
+rag_tool = RagTool()

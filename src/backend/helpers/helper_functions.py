@@ -1,3 +1,6 @@
+import os.path
+
+from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -7,13 +10,53 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
-from helpers.constants import service, options, driver, text_embedding_v3_small
+from helpers.constants import (service, options, driver, text_embedding_v3_small)
 from typing import Optional, Dict, Tuple, Union, Any, List
 from pydantic import BaseModel, Field
 from langchain_community.docstore.in_memory import InMemoryDocstore
+from sklearn.metrics.pairwise import cosine_similarity
 from faiss import IndexFlatL2
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import time
 import yaml
+import base64
+
+
+class RagToolModel(BaseModel):
+    chat_message: str = Field(
+        description="User's chat message",
+        min_length=5,
+        max_length=250,
+    )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "chat_message": "Would you tell me which version of the software was supposed to be installed?",
+            }
+        }
+
+
+class RequestIdentifierModel(BaseModel):
+    chat_message: str = Field(
+        description="User's chat message, which will be used to identify request type",
+        min_length=5,
+        max_length=250,
+    )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "chat_message": "Would you show me the picture of the pasta?",
+            }
+        }
+
+
+class RequestParser(BaseModel):
+    request_category: str = Field(
+        description="Category of the request, which is either 'information' or 'image'",
+    )
 
 
 class ScrapeTranscriptions(BaseModel):
@@ -212,8 +255,7 @@ def chunk_up_text(
 
 
 def create_empty_vectorstore(
-        embedding_model: Optional[Union[OpenAIEmbeddings, Any]] = text_embedding_v3_small,
-        vectorstore_name: Optional[str] = "empty_faiss_vs"
+        embedding_model: Optional[Union[OpenAIEmbeddings, Any]] = text_embedding_v3_small
 ):
     dimensions: int = len(embedding_model.embed_query("dummy"))
     empty_faiss_vs = FAISS(
@@ -224,8 +266,6 @@ def create_empty_vectorstore(
         normalize_L2=False
     )
 
-    empty_faiss_vs.save_local(vectorstore_name)
-
     return empty_faiss_vs
 
 
@@ -233,22 +273,50 @@ def create_vectorstore_index(
         documents: Union[str, List[str]],
         vectorstore: FAISS,
 ) -> FAISS:
-    _ = vectorstore.add_texts(documents)  # returns a list of embedding ids
+    document_list = Document(page_content=documents)
+    _ = vectorstore.add_documents([document_list])  # returns a list of embedding ids
 
     return vectorstore
 
-# if __name__ == "__main__":
-#     import pandas as pd
-#
-#     transcription_dictionary = scrape_transcription("https://www.youtube.com/watch?v=bG4VYwFnU8k&t=5s")
-#     if transcription_dictionary is not None:
-#         transcription_data = pd.DataFrame(
-#             {
-#                 "timestamp": transcription_dictionary.keys(),
-#                 "transcription": transcription_dictionary.values()
-#             }
-#         )
-#         print(transcription_data.head())
-#         transcription_data.to_csv("transcription_data.csv", index=False)
-#     else:
-#         print(f"Not Found The Transcription Element")
+
+def search_timestamp(
+        full_transcription: Dict[any, str],
+        chat_message: str
+) -> int:
+    search_results = {}
+    embedded_chat_message = text_embedding_v3_small.embed_query(chat_message)
+
+    for timestamp, transcript in full_transcription.items():
+        embedded_transcript = text_embedding_v3_small.embed_query(transcript)
+        similarity_score = cosine_similarity([embedded_chat_message], [embedded_transcript])[0][0]
+        search_results[f"{timestamp}"] = similarity_score
+
+    sorted_values = sorted(search_results.items(), key=lambda item: item[1], reverse=True)
+    timestamp, _ = sorted_values[0]
+
+    minutes, seconds = map(int, timestamp.split(":"))
+    total_seconds = minutes * 60 + seconds
+    return round(total_seconds)
+
+
+def take_screenshot(video_url: str) -> any:
+    try:
+        driver.get(video_url)
+        video_element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, "//video[@class='video-stream html5-main-video']"))
+        )
+        driver.execute_script("arguments[0].scrollIntoView();", video_element)
+        driver.save_screenshot('video_screenshot.png')
+
+        with open("video_screenshot.png", "rb") as f:
+            image = f.read()
+            base64_image = base64.b64encode(image).decode('utf-8')
+
+        return base64_image
+
+
+    except TimeoutException as err:
+        print(f"TimeoutException: {err}")
+
+    finally:
+        driver.close()

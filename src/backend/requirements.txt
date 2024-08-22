@@ -17,5 +17,4 @@ uvicorn==0.20.0
 python-multipart==0.0.9
 selenium==4.23.1
 webdriver-manager==4.0.2
-bs4==0.0.2
-lxml==5.3.0
+scikit-learn==1.5.1

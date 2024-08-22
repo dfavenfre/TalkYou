@@ -1,18 +1,26 @@
+import os
+from sklearn.metrics.pairwise import cosine_similarity
+from langgraph.graph import MessagesState
 from typing import (
     TypedDict,
     Union,
     Tuple,
     Dict,
-    List
+    List, Any
 )
 from helpers.tools import (
     transcription_checker,
     video_length_checker,
-    transcription_scrapper
+    transcription_scrapper,
+    request_identifier,
+    rag_tool
 )
 from helpers.helper_functions import (
     create_empty_vectorstore,
-    create_vectorstore_index
+    create_vectorstore_index,
+    text_embedding_v3_small,
+    search_timestamp,
+    take_screenshot
 )
 import tempfile
 import asyncio
@@ -24,6 +32,7 @@ class GraphState(TypedDict):
     -------------
     Represents the Graph State of our Chatbot Model
     """
+    identified_query: str
     video_url: str
     vectorstore_build: bool
     video_length: int
@@ -32,6 +41,12 @@ class GraphState(TypedDict):
     full_transcription: Dict[str, str]
     vectorstore_path: str
     chat_message: str
+    identified_request: str
+    response: str
+    search_result: Dict[Any, Any]
+    total_seconds: int
+    updated_url: str
+    screenshot_base64: Any
 
 
 def check_video_length(state):
@@ -117,5 +132,80 @@ def init_vectorstore(state):
     print("---PROCESS: VECTORSTORE READY---")
     return {
         "vectorstore_build": True,
-        "vectorstore_path": "faiss_vectorstore"
+        "vectorstore_path": "./faiss_vectorstore"
     }
+
+
+def load_vectorstore_states(state):
+    print("---CHECKING: SEARCHING FOR A VECTORSTORE---")
+    vectorstore_path = state["vectorstore_path"]
+
+    if vectorstore_path is not None:
+        return {"vectorstore_build": True}
+    else:
+        return {"vectorstore_build": False}
+
+
+def check_vectorstore_presence(state):
+    is_built = state["vectorstore_build"]
+    if is_built:
+        print("---DECISION: VECTORSTORE FOUND...PROCEEDING TO CHATBOT---")
+        return "Chatbot"
+
+    else:
+        print("---DECISION: VECTORSTORE NOT FOUND---")
+        return "Fetch Data"
+
+
+def query_identifier(states):
+    print("---PROCESS: QUERY IDENTIFIER---")
+    chat_message = states["chat_message"]
+
+    category = request_identifier._run(chat_message)
+
+    if category.request_category == "information":
+        print(f"---PROCESS: IDENTIFIED THE QUERY AS -> {category.request_category}---")
+        return {"identified_request": "information"}
+    else:
+        print(f"---PROCESS: IDENTIFIED THE QUERY AS -> {category.request_category}---")
+        return {"identified_request": "image"}
+
+
+def check_request_type(state):
+    identified_request = state["identified_request"]
+
+    if identified_request == "information":
+        return "Information"
+    else:
+        return "Image"
+
+
+def proceed_to_rag(state):
+    print(f"---PROCESS: GENERATING THE ANSWER---")
+    chat_message = state["chat_message"]
+    response = rag_tool._run(chat_message)
+
+    return {"response": response}
+
+
+def proceed_to_image_retrieval(state):
+    full_transcription = state["full_transcription"]
+    chat_message = state["chat_message"]
+    video_url = state["video_url"]
+
+    total_seconds = search_timestamp(full_transcription, chat_message)
+    if "&t=" in video_url:
+        pattern_index = video_url.find("&t=")
+        video_url = video_url[:pattern_index]
+        updated_url = video_url + f"&t={total_seconds}s"
+
+    else:
+        updated_url = video_url + f"&t={total_seconds}s"
+
+    return {"total_seconds": total_seconds, "updated_url": updated_url}
+
+
+def take_video_screenshot(state):
+    updated_url = state["updated_url"]
+    base64_image = take_screenshot(updated_url)
+    return {"screenshot_base64": base64_image}

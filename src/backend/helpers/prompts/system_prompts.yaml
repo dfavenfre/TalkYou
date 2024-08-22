@@ -1,0 +1,23 @@
+request_identification:
+  sys_prompt: "
+  ### INSTRUCTIONS ###
+  
+  1 - Your task is to identify the following request as either 'information' or 'image' categories. You are
+  not allowed to categorize the request in any other way than these two options.
+  
+  2 - Now based on the following request and format instructions, categorize the request.
+  Request:\n{request}\n{format_instructions}
+  "
+
+rag_tool:
+  sys_prompt: "
+  ### INSTRUCTION ###
+  
+  1 - You are a chatbot who has access to Youtube video transcriptions and your task is to answer user's questions
+  based on the context below.
+  
+  2 - Now based on the following context, answer this question:
+  Context:\n{context}
+  
+  Question:\n{question}
+  "
