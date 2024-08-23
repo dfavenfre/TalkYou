@@ -1,0 +1,142 @@
+.subheader-container {
+    margin: 30px auto;
+    text-align: center;
+}
+
+.subheader {
+    background: linear-gradient(145deg, #6a5acd, #7e81a9); /* Gradient background */
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    padding: 15px 30px;
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Enhanced shadow effect */
+    display: inline-block;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background 0.3s ease-in-out;
+}
+
+.subheader:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Darker shadow on hover */
+    background: linear-gradient(145deg, #7e81a9, #6a5acd); /* Reversed gradient on hover */
+}
+
+.bubble-container {
+    position: relative;
+    display: inline-block;
+    margin: 20px;
+}
+
+.bubbles-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.bubble-link {
+    text-decoration: none;
+}
+
+.bubble {
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(145deg, #7e81a9, #6a5acd); /* Gradient background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid #6a5acd; /* Subtle border effect */
+}
+
+.bubble-text {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px; /* Space between text and logo */
+}
+
+.bubble-logo {
+    width: 60px; /* Adjust size as needed */
+    height: 60px;
+    filter: brightness(0) invert(1); /* Invert color for better contrast */
+}
+
+.bubble:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3); /* Shadow effect on hover */
+    background: linear-gradient(145deg, #6a5acd, #7e81a9); /* Reversed gradient on hover */
+}
+
+.bubble-url {
+    visibility: hidden;
+    width: 120px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.bubble-container:hover .bubble-url {
+    visibility: visible;
+    opacity: 1;
+}
+
+.bubble-url::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #333 transparent transparent transparent;
+}
+
+.divider {
+    margin: 30px 0;
+    border: 0;
+    border-top: 2px solid #7e81a9; /* Dark blue color */
+    width: 80%; /* Adjust the width as needed */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.text-container {
+    margin: 30px auto;
+    padding: 20px;
+    background-color: #f8f9fa; /* Light background color for better readability */
+    color: #343a40; /* Darker text color for better contrast */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Shadow effect */
+    width: 80%; /* Adjust width as needed */
+    max-width: 700px; /* Optional: limit maximum width */
+    text-align: justify; /* Justify text alignment */
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.text-container:hover {
+    transform: translateY(-5px); /* Slightly lift the container on hover */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Darker shadow on hover */
+}
+
+.text-link {
+    color: #007bff; /* Link color (blue) */
+    text-decoration: none; /* Remove underline from links */
+}
+
+.text-link:hover {
+    text-decoration: underline; /* Add underline on hover */
+}

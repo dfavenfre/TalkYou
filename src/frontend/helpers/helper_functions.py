@@ -1,6 +1,6 @@
-from elements.constants import (
+from helpers.constants import (
     backend_signal_url,
-    fetch_transcription_element
+    agent_url
 )
 from typing import (
     Optional,
@@ -13,7 +13,7 @@ import requests
 import time
 
 
-async def check_application():
+def check_application():
     try:
         response = requests.get(
             url=backend_signal_url,
@@ -26,11 +26,11 @@ async def check_application():
         st.warning(f"Error While Checking Backend Connection: {e}")
 
 
-async def check_transcription(payload: str):
+def check_transcription(payload: str):
     package = {"video_url": payload}
     try:
         response = requests.post(
-            url=fetch_transcription_element,
+            url=agent_url,
             headers={"Content-Type": "application/json"},
             json=package
         )
@@ -40,3 +40,29 @@ async def check_transcription(payload: str):
 
     except Exception as err:
         st.warning(f"Error While Checking Transcription: {err}")
+
+
+def load_sidebar_html() -> str:
+    """
+    Description:
+    -----------
+    Function to load the sidebar HTML template, read CSS, and insert dynamic content.
+
+    Args:
+    -----------
+
+
+    Returns:
+    -----------
+    The resulting HTML string with embedded CSS.
+    """
+
+    with open("helpers/elements/sidebar.css", 'r', encoding='utf-8') as css_file:
+        css_content = f"<style>{css_file.read()}</style>"
+
+    with open("helpers/elements/sidebar_element.html", 'r', encoding='utf-8') as html_file:
+        html_template = html_file.read()
+
+    final_html = f"{css_content}\n{html_template}"
+
+    return final_html

@@ -234,7 +234,7 @@ def scroll_down(engine: webdriver, scrolling_by: Tuple[int, int]):
 def load_sys_prompt(
         prompt_name: str
 ) -> str:
-    with open("elements/prompts/system_prompts.yaml", "r", encoding="utf-8") as prompt_file:
+    with open("helpers/prompts/system_prompts.yaml", "r", encoding="utf-8") as prompt_file:
         system_prompts = yaml.safe_load(prompt_file)
     decoded_prompt = system_prompts[prompt_name]
     return decoded_prompt["sys_prompt"]
