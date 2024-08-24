@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Any
 )
+from jinja2 import Template
 import streamlit as st
 import requests
 import time
@@ -66,3 +67,17 @@ def load_sidebar_html() -> str:
     final_html = f"{css_content}\n{html_template}"
 
     return final_html
+
+
+def render_chat(messages):
+    with open("helpers/elements/chat_template.html", 'r', encoding='utf-8') as html_file:
+        html_template = html_file.read()
+
+    with open("helpers/elements/chat_styles.css", 'r', encoding='utf-8') as css_file:
+        css_content = f"<style>{css_file.read()}</style>"
+
+    final_html = f"{css_content}\n{html_template}"
+
+    template = Template(final_html)
+    rendered_html = template.render(messages=messages)
+    st.html(rendered_html)
