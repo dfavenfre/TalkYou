@@ -1,0 +1,49 @@
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.message {
+    max-width: 70%;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 1em;
+    line-height: 1.5em;
+    word-wrap: break-word;
+}
+
+.user-message {
+    align-self: flex-end;
+    background-color: #DCF8C6;
+    text-align: right;
+    background-image: linear-gradient(to left, #2a9d8f, #e9c46a);
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-weight: bold; /* Make the text bold */
+    padding: 10px 15px; /* Add padding to create a bubble effect */
+    border-radius: 10px; /* Rounded corners for a bubble appearance */
+    max-width: 70%; /* Limit the bubble width for readability */
+    margin: 5px 0; /* Add space between messages */
+    border: 1px solid #2a9d8f; /* Optional: Add a border to the bubble */
+}
+
+.assistant-message {
+    align-self: flex-start;
+    background-color: #F1F1F1;
+    text-align: left;
+    background-image: linear-gradient(to right, #264653, #e76f51);
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    font-weight: bold; /* Make the text bold */
+    padding: 10px 15px; /* Add padding to create a bubble effect */
+    border-radius: 10px; /* Rounded corners for a bubble appearance */
+    max-width: 70%; /* Limit the bubble width for readability */
+    margin: 5px 0; /* Add space between messages */
+    border: 1px solid #264653; /* Optional: Add a border to the bubble */
+}
