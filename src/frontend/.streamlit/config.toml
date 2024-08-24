@@ -1,0 +1,9 @@
+[theme]
+base = 'dark'
+font = "sans serif"
+backgroundColor = '#1E292D'
+secondaryBackgroundColor = "#37474F"
+primaryColor = "#66CCCC"
+textColor = "#E0E0E0"
+primaryButtonColor = "#4CAF50"
+primaryButtonTextColor = "#FFFFFF"
