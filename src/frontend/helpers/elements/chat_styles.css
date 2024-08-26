@@ -1,3 +1,10 @@
+.icon {
+    width: 30px; /* Set the desired width */
+    height: 30px; /* Set the desired height */
+    margin-right: 8px; /* Space between icon and message */
+    object-fit: cover; /* Ensures the icon scales without distortion */
+}
+
 .chat-container {
     display: flex;
     flex-direction: column;
@@ -18,32 +25,26 @@
 
 .user-message {
     align-self: flex-end;
-    background-color: #DCF8C6;
+    background-color: #2C3E50; /* Darker shade for user messages */
+    color: #ECF0F1; /* Light gray text for readability */
     text-align: right;
-    background-image: linear-gradient(to left, #2a9d8f, #e9c46a);
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
     font-weight: bold; /* Make the text bold */
     padding: 10px 15px; /* Add padding to create a bubble effect */
-    border-radius: 10px; /* Rounded corners for a bubble appearance */
+    border-radius: 8px; /* Slightly rounded corners */
     max-width: 70%; /* Limit the bubble width for readability */
     margin: 5px 0; /* Add space between messages */
-    border: 1px solid #2a9d8f; /* Optional: Add a border to the bubble */
+    border: 1px solid #34495E; /* Slightly lighter border for subtle contrast */
 }
 
 .assistant-message {
     align-self: flex-start;
-    background-color: #F1F1F1;
+    background-color: #34495E; /* Slightly lighter shade for assistant messages */
+    color: #ECF0F1; /* Light gray text for readability */
     text-align: left;
-    background-image: linear-gradient(to right, #264653, #e76f51);
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
     font-weight: bold; /* Make the text bold */
     padding: 10px 15px; /* Add padding to create a bubble effect */
-    border-radius: 10px; /* Rounded corners for a bubble appearance */
+    border-radius: 8px; /* Slightly rounded corners */
     max-width: 70%; /* Limit the bubble width for readability */
     margin: 5px 0; /* Add space between messages */
-    border: 1px solid #264653; /* Optional: Add a border to the bubble */
+    border: 1px solid #2C3E50; /* Slightly darker border for subtle contrast */
 }
