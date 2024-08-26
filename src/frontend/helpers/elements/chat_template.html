@@ -1,7 +1,12 @@
 <div class="chat-container">
     {% for message in messages %}
         <div class="message {{ message.role }}-message">
-            <strong>{{ message.role.capitalize() }}:</strong> {{ message.content }}
+            {% if message.role == "user" %}
+                <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="User Icon" class="icon">
+            {% elif message.role == "assistant" %}
+                <img src="https://cdn-icons-png.flaticon.com/512/7626/7626850.png" alt="Assistant Icon" class="icon">
+            {% endif %}
+            <span class="message-content">{{ message.content }}</span>
         </div>
     {% endfor %}
 </div>
