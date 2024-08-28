@@ -1,4 +1,3 @@
-import os
 from sklearn.metrics.pairwise import cosine_similarity
 from langgraph.graph import MessagesState
 from typing import (
@@ -13,6 +12,7 @@ from helpers.tools import (
     video_length_checker,
     transcription_scrapper,
     request_identifier,
+    screenshot_tool,
     rag_tool
 )
 from helpers.helper_functions import (
@@ -24,7 +24,7 @@ from helpers.helper_functions import (
 )
 import tempfile
 import asyncio
-
+import os
 
 class GraphState(TypedDict):
     """
@@ -207,5 +207,5 @@ def proceed_to_image_retrieval(state):
 
 def take_video_screenshot(state):
     updated_url = state["updated_url"]
-    base64_image = take_screenshot(updated_url)
+    base64_image = screenshot_tool.run(updated_url)
     return {"screenshot_base64": base64_image}
