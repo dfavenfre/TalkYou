@@ -1,3 +1,6 @@
+import asyncio
+
+import httpx
 from helpers.constants import (
     backend_signal_url,
     agent_url
@@ -27,20 +30,46 @@ def check_application():
         st.warning(f"Error While Checking Backend Connection: {e}")
 
 
-def check_transcription(payload: str):
-    package = {"video_url": payload}
+async def chat_bot(
+        video_url: str,
+        chat_message: Optional[str] = None,
+) -> Union[Any, str, Dict[str, Any]]:
     try:
+        form_data = {
+            "video_url": video_url,
+            "chat_message": chat_message
+        }
+
         response = requests.post(
             url=agent_url,
-            headers={"Content-Type": "application/json"},
-            json=package
+            data=form_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
+
         if response is not None:
-            data = response.json()
-            return data
+            return response.json()
 
     except Exception as err:
-        st.warning(f"Error While Checking Transcription: {err}")
+        st.warning(f"Error While Chat Bot: {err}")
+
+
+def submit_video_url(video_url: str) -> None:
+    if "youtube" not in video_url:
+        place_holder = st.empty()
+        st.warning("Please make sure that you send a YouTube video URL")
+        time.sleep(2)
+        place_holder.empty()
+
+    else:
+        place_holder = st.empty()
+        with st.spinner('Preparing The Chatbot...'):
+            response = asyncio.run(chat_bot(video_url))
+            if response:
+                place_holder.success("Vectorstore Created, Ready To Chat !")
+            time.sleep(2)
+            place_holder.empty()
+            st.session_state.video_url = video_url
+        st.rerun()
 
 
 def load_sidebar_html() -> str:
@@ -48,10 +77,6 @@ def load_sidebar_html() -> str:
     Description:
     -----------
     Function to load the sidebar HTML template, read CSS, and insert dynamic content.
-
-    Args:
-    -----------
-
 
     Returns:
     -----------
@@ -69,7 +94,7 @@ def load_sidebar_html() -> str:
     return final_html
 
 
-def render_chat(messages):
+def render_chat():
     with open("helpers/elements/chat_template.html", 'r', encoding='utf-8') as html_file:
         html_template = html_file.read()
 
@@ -78,6 +103,10 @@ def render_chat(messages):
 
     final_html = f"{css_content}\n{html_template}"
 
+    new_messages = st.session_state.messages[st.session_state["last_rendered_index"]:]
+    st.session_state["last_rendered_index"] = len(st.session_state.messages)
+
     template = Template(final_html)
-    rendered_html = template.render(messages=messages)
+    rendered_html = template.render(messages=new_messages)
+
     st.html(rendered_html)
