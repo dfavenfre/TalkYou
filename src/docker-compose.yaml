@@ -15,10 +15,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: "2"
           memory: "2G"
         reservations:
-          cpus: "0.5"
+          cpus: "1"
           memory: "1G"
 
   backend:
@@ -32,13 +32,14 @@ services:
     networks:
       - app
     container_name: talkyou-backend
+    hostname: backend
     deploy:
       resources:
         limits:
-          cpus: "3"
+          cpus: "5"
           memory: "5G"
         reservations:
-          cpus: "2"
+          cpus: "3"
           memory: "3G"
 
 networks:
