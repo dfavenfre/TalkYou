@@ -1,8 +1,10 @@
+import base64
+
 from helpers.helper_functions import (
-    check_application,
-    check_transcription,
     load_sidebar_html,
-    render_chat
+    render_chat,
+    chat_bot,
+    submit_video_url
 )
 from streamlit_extras.stylable_container import stylable_container
 import extra_streamlit_components as esc
@@ -21,44 +23,51 @@ st.set_page_config(
 if "video_url" not in st.session_state:
     st.session_state["video_url"] = None
 
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
-
+if "last_rendered_index" not in st.session_state:
+    st.session_state["last_rendered_index"] = 0
 
 with st.sidebar:
     sidebar_content = load_sidebar_html()
     st.html(sidebar_content)
 
 if st.session_state["video_url"] is None:
-    with st.popover("Insert video url here", use_container_width=True):
-        st.markdown("Hello 👋")
+    st.image("helpers/elements/assets/talkyou-langgraph-schema.jpg")
+    with st.expander(label="Welcome To TalkYou 👋", expanded=True):
         video_url = st.text_input("Have any videos on your mind?")
-        if "youtube" not in video_url:
-            place_holder = st.empty()
-            st.warning("Please make sure that you send a YouTube video URL")
-            time.sleep(2)
-            place_holder.empty()
-        else:
-            st.session_state["video_url"] = video_url
-            st.rerun()
-
+        if st.button(
+                label="Submit",
+                key="videoUrlSubmission",
+        ):
+            submit_video_url(video_url)
 
 elif st.session_state.video_url is not None:
 
-    render_chat(st.session_state.messages)
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [
+            {"role": "assistant", "content": "Welcome, It's Your Video Talking! What do you like to ask me?"}
+        ]
+    render_chat()
 
     if user_message := st.chat_input(
             placeholder="What do you like to ask me?",
             key="chat_input_message",
             max_chars=250
     ):
-        # Append the new user message
+
         st.session_state.messages.append({"role": "user", "content": user_message})
+        render_chat()
 
-        # Generate a response (in this example, a static response)
-        _demo: str = "this is a test assistant message"
-        st.session_state.messages.append({"role": "assistant", "content": _demo})
+        ai_message = asyncio.run(
+            chat_bot(
+                video_url=st.session_state.video_url,
+                chat_message=user_message
+            )
+        )
 
-        # Re-render the chat to include the new messages
-        render_chat(st.session_state.messages)
+        if "screenshot_base64" in ai_message.keys() and ai_message["identified_request"] == "image":
+            converted_image = base64.b64decode(ai_message["screenshot_base64"])
+            st.image(converted_image)
 
+        else:
+            st.session_state.messages.append({"role": "assistant", "content": ai_message["response"]})
+            render_chat()
