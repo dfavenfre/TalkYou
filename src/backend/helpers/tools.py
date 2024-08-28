@@ -25,56 +25,46 @@ from helpers.helper_functions import (
     ScrapeTranscriptions,
     RequestIdentifierModel,
     RequestParser,
-    RagToolModel
+    RagToolModel,
+    ScreenshotModel
 )
 
-# Memory
 from langchain.memory import (
     ConversationBufferMemory,
     ConversationBufferWindowMemory
 )
-
-# Prompts
 from langchain_core.prompts import (
     ChatPromptTemplate,
     PromptTemplate
 )
 from langchain_core.messages import AIMessage
-
-# Output Parsers
 from langchain_core.output_parsers import (
     JsonOutputParser,
     StrOutputParser,
     PydanticOutputParser
 )
-
-# Runnables
 from langchain_core.runnables import (
     Runnable,
     RunnableMap,
     RunnableLambda,
     RunnablePassthrough
 )
-# Models
 from langchain_openai import ChatOpenAI
-
-# Tools
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )
 from langchain_core.tools import tool
 from langchain.tools import BaseTool, StructuredTool, tool
-
-# Fundamentals
 from helpers.constants import service, options, driver
 from langchain_core.tracers.context import tracing_v2_enabled
 from typing import List, Optional, Tuple, Any, Dict, Sequence, Type, Union
 from pydantic import BaseModel, Field
 from operator import itemgetter
-import langchain_community
 from datetime import datetime
 from dotenv import load_dotenv
+import base64
+import langchain_community
 import time
 import asyncio
 import sqlite3
@@ -143,7 +133,7 @@ class VideoLengthTool(BaseTool):
         try:
             driver.get(video_url)
 
-            video_length = WebDriverWait(driver, 3).until(
+            video_length = WebDriverWait(driver, 5).until(
                 EC.visibility_of_element_located(
                     (
                         By.XPATH,
@@ -196,7 +186,7 @@ class TranscriptionScrapperTool(BaseTool):
             )
 
             transcription_element.click()
-            time.sleep(2)
+            time.sleep(3)
 
             transcription_bar = driver.find_element(
                 By.XPATH,
@@ -219,7 +209,6 @@ class TranscriptionScrapperTool(BaseTool):
 
         except TimeoutException as err:
             print(f"TimeoutException: {err}")
-
 
 
 class RequestIdentifierTool(BaseTool):
@@ -248,6 +237,35 @@ class RequestIdentifierTool(BaseTool):
             response = identification_chain.invoke({"request": chat_message})
 
         return response
+
+
+class ScreenshotTool(BaseTool):
+    name: str = "ScreenshotTool"
+    description: str = """Takes a screenshot of the 
+    given video based on the most relevant timestamp"""
+    args_schema: Type[BaseModel] = ScreenshotModel
+
+    def _run(
+            self,
+            video_url: str,
+            run_manager: Optional[CallbackManagerForToolRun] = None
+    ) -> Union[str, bytes, base64]:
+        try:
+            driver.get(video_url)
+            video_element = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.XPATH, "//video[@class='video-stream html5-main-video']"))
+            )
+            driver.execute_script("arguments[0].scrollIntoView();", video_element)
+            driver.save_screenshot('video_screenshot.png')
+
+            with open("video_screenshot.png", "rb") as f:
+                image = f.read()
+                base64_image = base64.b64encode(image).decode('utf-8')
+
+            return base64_image
+
+        except TimeoutException as err:
+            print(f"TimeoutException: {err}")
 
 
 class RagTool(BaseTool):
@@ -287,4 +305,5 @@ transcription_checker = TranscriptionTool()
 video_length_checker = VideoLengthTool()
 transcription_scrapper = TranscriptionScrapperTool()
 request_identifier = RequestIdentifierTool()
+screenshot_tool = ScreenshotTool()
 rag_tool = RagTool()
