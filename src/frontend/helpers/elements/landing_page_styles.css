@@ -1,0 +1,51 @@
+body2 {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.content-wrapper2 {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* Removed text-container2 and its styles as it's no longer needed */
+
+.subheader2 {
+    background: linear-gradient(145deg, #6a5acd, #7e81a9);
+    color: white;
+    font-size: 36px;
+    font-weight: 600;
+    padding: 15px 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    display: inline-block;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background 0.3s ease-in-out;
+    margin-bottom: 20px;
+    text-align: center;
+    width: calc(100% - 60px); /* Adjust based on padding */
+}
+
+.subheader2:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(145deg, #7e81a9, #6a5acd);
+}
+
+.divider2 {
+    margin: 40px 0;
+    border: 0;
+    border-top: 2px solid #7e81a9;
+    width: 100%; /* Make divider fit to full width */
+}
+
+@media (max-width: 600px) {
+    .subheader2 {
+        font-size: 28px;
+        padding: 10px 20px;
+    }
+}
