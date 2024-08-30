@@ -20,6 +20,8 @@ from helpers.constants import (
     text_embedding_v3_small
 )
 from helpers.helper_functions import (
+    create_empty_vectorstore,
+    create_metadata,
     FetchTranscriptionModel,
     FetchVideoLengthModel,
     ScrapeTranscriptions,
@@ -205,6 +207,9 @@ class TranscriptionScrapperTool(BaseTool):
                 time_value = timestamp.text
                 full_transcription[time_value] = transcription.text
 
+            empty_faiss_vectorstore = create_empty_vectorstore()
+            create_metadata(full_transcription, empty_faiss_vectorstore)
+
             return full_transcription
 
         except TimeoutException as err:
@@ -227,6 +232,7 @@ class RequestIdentifierTool(BaseTool):
             input_variables=["request"],
             partial_variables={"format_instructions": output_parser.get_format_instructions()}
         )
+
         identification_chain = (
                 identification_prompt
                 | gpt_4o_mini
