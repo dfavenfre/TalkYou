@@ -568,6 +568,18 @@ def create_vectorstore_index(
     return vectorstore
 
 
+def create_metadata(
+        full_transcription: Dict[any, str],
+        vectorstore: FAISS
+) -> None:
+    metadata_content = []
+    for timestamp, transcript in full_transcription.items():
+        metadata_content.append(Document(page_content=transcript, metadata={"timestamp": timestamp}))
+
+    _ = vectorstore.add_documents(metadata_content)
+    vectorstore.save_local("faiss_metadata")
+
+
 def search_timestamp(
         full_transcription: Dict[any, str],
         chat_message: str
@@ -590,19 +602,15 @@ def search_timestamp(
     ------------
     int: The timestamp (in seconds) of the transcript segment with the highest similarity score, rounded to the nearest second.
     """
+    retriever = FAISS.load_local(
+        folder_path="./faiss_metadata",
+        embeddings=text_embedding_v3_small,
+        allow_dangerous_deserialization=True
+    )
+    relevant_document = retriever.similarity_search(chat_message, k=1)
+    found_timestamp = relevant_document[0].metadata["timestamp"]
 
-    search_results = {}
-    embedded_chat_message = text_embedding_v3_small.embed_query(chat_message)
-
-    for timestamp, transcript in full_transcription.items():
-        embedded_transcript = text_embedding_v3_small.embed_query(transcript)
-        similarity_score = cosine_similarity([embedded_chat_message], [embedded_transcript])[0][0]
-        search_results[f"{timestamp}"] = similarity_score
-
-    sorted_values = sorted(search_results.items(), key=lambda item: item[1], reverse=True)
-    timestamp, _ = sorted_values[0]
-
-    minutes, seconds = map(int, timestamp.split(":"))
+    minutes, seconds = map(int, found_timestamp.split(":"))
     total_seconds = minutes * 60 + seconds
     return round(total_seconds)
 
