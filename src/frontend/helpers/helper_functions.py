@@ -1,4 +1,6 @@
 import asyncio
+import base64
+from pathlib import Path
 
 import httpx
 from helpers.constants import (
@@ -95,6 +97,10 @@ def load_sidebar_html() -> str:
 
 
 def render_chat():
+    # Uncomment the below assignment when needed
+    # if "last_rendered_index" not in st.session_state:
+    #     st.session_state["last_rendered_index"] = 0
+
     with open("helpers/elements/chat_template.html", 'r', encoding='utf-8') as html_file:
         html_template = html_file.read()
 
@@ -110,3 +116,20 @@ def render_chat():
     rendered_html = template.render(messages=new_messages)
 
     st.html(rendered_html)
+
+
+def stream_text(text: str) -> str:
+    for chunk in text.split():
+        yield chunk + " "
+        time.sleep(0.05)
+
+
+def render_landing_page() -> None:
+    with open("helpers/elements/landing_page_content.html", 'r', encoding='utf-8') as html_file:
+        html_content = html_file.read()
+
+    with open("helpers/elements/landing_page_styles.css", 'r', encoding='utf-8') as css_file:
+        css_content = f"<style>{css_file.read()}</style>"
+
+    full_html = f"{css_content}\n{html_content}"
+    st.html(full_html)
