@@ -23,6 +23,15 @@ import yaml
 import base64
 
 
+from pytube import YouTube
+from pytube.innertube import _default_clients
+from pytube import cipher
+import re
+import os
+import whisper
+import torch
+
+
 class ScreenshotModel(BaseModel):
     """
     Model for specifying the URL of a video for which a screenshot is to be taken.
@@ -655,3 +664,280 @@ def take_screenshot(
 
     except TimeoutException as err:
         print(f"TimeoutException: {err}")
+
+
+
+
+
+
+class YouTubeConverter:
+    """
+    A class responsible for handling YouTube video downloads and conversion of videos to audio files using Pytube.
+
+    Attributes:
+    -----------
+    destination : str
+        The directory path where the audio files will be saved.
+
+    Methods:
+    --------
+    _configure_pytube():
+        Configures Pytube by modifying client versions to avoid throttling issues.
+
+    get_throttling_function_name(js: str) -> str:
+        Extracts the name of the function that computes the throttling parameter from the JavaScript.
+
+    video_to_audio(video_URL: str, final_filename: str) -> str:
+        Downloads a YouTube video, converts it to an audio file, and saves it to the specified destination.
+
+    convert(url: str) -> str:
+        Wrapper function that calls `video_to_audio` with default parameters to convert a video to audio.
+    """
+
+    def __init__(self, destination="."):
+        self.destination = destination
+        self._configure_pytube()
+
+    def _configure_pytube(self):
+        """
+        Configures Pytube's client versions to avoid throttling issues by adjusting the `_default_clients` settings.
+        This method also replaces the throttling function in Pytube's cipher module.
+        """
+        # Modify _default_clients to adjust client versions
+        _default_clients["ANDROID"]["context"]["client"]["clientVersion"] = "19.08.35"
+        _default_clients["IOS"]["context"]["client"]["clientVersion"] = "19.08.35"
+        _default_clients["ANDROID_EMBED"]["context"]["client"]["clientVersion"] = "19.08.35"
+        _default_clients["IOS_EMBED"]["context"]["client"]["clientVersion"] = "19.08.35"
+        _default_clients["IOS_MUSIC"]["context"]["client"]["clientVersion"] = "6.41"
+        _default_clients["ANDROID_MUSIC"] = _default_clients["ANDROID_CREATOR"]
+
+        # Replace the throttling function
+        cipher.get_throttling_function_name = self.get_throttling_function_name
+
+    @staticmethod
+    def get_throttling_function_name(js: str) -> str:
+        """
+        Extracts the name of the function that computes the throttling parameter from the JavaScript.
+
+        Parameters:
+        -----------
+        js : str
+            The contents of the base.js asset file.
+
+        Returns:
+        --------
+        str
+            The name of the function used to compute the throttling parameter.
+
+        Raises:
+        -------
+        Exception:
+            If the throttling function name cannot be found using the provided regular expressions.
+        """
+        function_patterns = [
+            r'a\.[a-zA-Z]\s*&&\s*\([a-z]\s*=\s*a\.get\("n"\)\)\s*&&\s*'
+            r'\([a-z]\s*=\s*([a-zA-Z0-9$]+)(\[\d+\])?\([a-z]\)',
+            r'\([a-z]\s*=\s*([a-zA-Z0-9$]+)(\[\d+\])\([a-z]\)',
+        ]
+        for pattern in function_patterns:
+            regex = re.compile(pattern)
+            function_match = regex.search(js)
+            if function_match:
+                if len(function_match.groups()) == 1:
+                    return function_match.group(1)
+                idx = function_match.group(2)
+                if idx:
+                    idx = idx.strip("[]")
+                    array = re.search(
+                        r'var {nfunc}\s*=\s*(\[.+?\]);'.format(
+                            nfunc=re.escape(function_match.group(1))),
+                        js
+                    )
+                    if array:
+                        array = array.group(1).strip("[]").split(",")
+                        array = [x.strip() for x in array]
+                        return array[int(idx)]
+
+        raise Exception(
+            "RegexMatchError: Unable to find throttling function name."
+        )
+
+    def video_to_audio(self, video_URL, final_filename):
+        """
+        Downloads a YouTube video, converts it to an audio file, and saves it to the specified destination.
+
+        Parameters:
+        -----------
+        video_URL : str
+            The URL of the YouTube video to be downloaded.
+
+        final_filename : str
+            The name of the final audio file (without extension).
+
+        Returns:
+        --------
+        str
+            The path to the saved audio file.
+        """
+        # Get the video
+        video = YouTube(video_URL)
+
+        # Convert video to Audio
+        audio = video.streams.filter(only_audio=True).first()
+
+        # Save to destination
+        output = audio.download(output_path=self.destination)
+
+        _, ext = os.path.splitext(output)
+        new_file = os.path.join(self.destination, final_filename + '.mp3')
+
+        # Change the name of the file
+        os.rename(output, new_file)
+        return new_file
+
+    def convert(self, url):
+        """
+        Wrapper function that calls `video_to_audio` with default parameters to convert a video to audio.
+
+        Parameters:
+        -----------
+        url : str
+            The URL of the YouTube video to be converted.
+
+        Returns:
+        --------
+        str
+            The path to the saved audio file.
+        """
+        final_filename = "audio_file_to_convert"
+        return self.video_to_audio(url, final_filename)
+
+class WhisperTranscriber:
+    """
+    A class responsible for transcribing audio files into text using Whisper.
+
+    Attributes:
+    -----------
+    device : str
+        The device (CPU or GPU) on which the Whisper model will be loaded.
+
+    whisper_model : whisper.Whisper
+        The Whisper model loaded for transcription.
+
+    Methods:
+    --------
+    transcribe(audio_file: str) -> str:
+        Transcribes the provided audio file and formats the transcription.
+
+    format_segments(result_segments: list) -> str:
+        Formats the transcription segments into a readable string format.
+
+    format_time_milliseconds(seconds: float) -> str:
+        Converts time in seconds to a string format of hours:minutes:seconds.milliseconds.
+
+    dump_into_txt(formatted_result: str, output_file_path: str):
+        Saves the formatted transcription result to a text file.
+    """
+
+    def __init__(self):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.whisper_model = whisper.load_model("base", device=self.device)
+
+    def transcribe(self, audio_file):
+        """
+        Transcribes the provided audio file and formats the transcription.
+
+        Parameters:
+        -----------
+        audio_file : str
+            The path to the audio file to be transcribed.
+
+        Returns:
+        --------
+        str
+            A formatted string containing the transcribed text with timestamps.
+        """
+        result = self.whisper_model.transcribe(audio_file)
+        result_segments = result['segments']
+        print(result_segments)
+        return self.format_segments(result_segments)
+
+    @staticmethod
+    def format_segments(result_segments):
+        """
+        Formats the transcription segments into a readable string format.
+
+        Parameters:
+        -----------
+        result_segments : list
+            A list of transcription segments, each containing start time, end time, and text.
+
+        Returns:
+        --------
+        str
+            A formatted string of the transcription segments with timestamps.
+        """
+        formatted_output = []
+
+        for segment in result_segments:
+            start_time = segment['start']
+            end_time = segment['end']
+            text = segment['text']
+
+            formatted_text = f"[{WhisperTranscriber.format_time_milliseconds(start_time)} --> {WhisperTranscriber.format_time_milliseconds(end_time)}] {text}"
+            formatted_output.append(formatted_text)
+
+        return "\n".join(formatted_output)
+
+    @staticmethod
+    def format_time_milliseconds(seconds):
+        """
+        Converts time in seconds to a string format of hours:minutes:seconds.milliseconds.
+
+        Parameters:
+        -----------
+        seconds : float
+            Time in seconds.
+
+        Returns:
+        --------
+        str
+            Time formatted as a string in hours:minutes:seconds.milliseconds.
+        """
+        minutes, seconds = divmod(seconds, 60)
+        hours, minutes = divmod(minutes, 60)
+        milliseconds = int((seconds - int(seconds)) * 1000)
+        return f"{int(hours):01}:{int(minutes):01}:{int(seconds):02}.{milliseconds:03}"
+
+    def dump_into_txt(self, formatted_result, output_file_path):
+        """
+        Saves the formatted transcription result to a text file.
+
+        Parameters:
+        -----------
+        formatted_result : str
+            The formatted transcription string to be saved.
+
+        output_file_path : str
+            The path where the transcription text file will be saved.
+        """
+        with open(output_file_path, 'w') as output_file:
+            output_file.write(formatted_result)
+        print(f"Formatted result saved to {output_file_path}")
+
+# Main function to demonstrate the use of the classes
+def main():
+    youtube_converter = YouTubeConverter(destination=".")
+    whisper_transcriber = WhisperTranscriber()
+
+    url = input("Enter the Link of YouTube Video to be converted: ")
+    audio_file = youtube_converter.convert(url)
+    formatted_result = whisper_transcriber.transcribe(audio_file)
+    output_file_path = './transcribed_text.txt'
+    whisper_transcriber.dump_into_txt(formatted_result, output_file_path)
+
+# Run the main function
+if __name__ == "__main__":
+    main()
+
+
