@@ -18,13 +18,20 @@ from helpers.tools import (
 from helpers.helper_functions import (
     create_empty_vectorstore,
     create_vectorstore_index,
+    create_metadata,
     text_embedding_v3_small,
     search_timestamp,
-    take_screenshot
+    take_screenshot,
+    YouTubeConverter,
+    WhisperTranscriber
 )
 import tempfile
 import asyncio
 import os
+
+youtube_converter = YouTubeConverter(destination=".")
+whisper_transcriber = WhisperTranscriber()
+
 
 class GraphState(TypedDict):
     """
@@ -54,7 +61,7 @@ def check_video_length(state):
     video_url = state["video_url"]
 
     try:
-        length = video_length_checker(video_url)
+        length = video_length_checker._run(video_url)
         print(F"---PROCESS: VIDEO LENGTH IS -> {length}")
 
         if length >= 20:
@@ -69,7 +76,7 @@ def check_video_length(state):
 def selenium_or_pytube(state):
     video_length = state["video_length"]
 
-    if video_length == "<20":
+    if video_length == ">20":
         print("---PROCESS: MOVING ON WITH SELENIUM---")
         return "Selenium"
 
@@ -81,7 +88,29 @@ def selenium_or_pytube(state):
 def download_with_pytube(state):
     video_url = state["video_url"]
     print("---PROCESS: DOWNLOADING VIDEO WITH PYTUBE---")
-    return {"transcription_text": "..."}
+    audio_file = youtube_converter.convert(video_url)
+    formatted_results = whisper_transcriber.transcribe(audio_file)
+    parsed_transcription = ". ".join(formatted_results.values())
+
+    empty_faiss_vectorstore = create_empty_vectorstore()
+    create_metadata(formatted_results, empty_faiss_vectorstore)
+
+    return {
+        "transcription_text": parsed_transcription,
+        "full_transcription": formatted_results
+    }
+
+
+def extract_transcription(state):
+    print("---PROCESS: EXTRACTING TRANSCRIPTION---")
+    video_url = state["video_url"]
+
+    full_transcription = transcription_scrapper._run(video_url)
+    parsed_transcription = ". ".join(full_transcription.values())
+    return {
+        "transcription_text": parsed_transcription,
+        "full_transcription": full_transcription
+    }
 
 
 def check_transcription_element(state):
@@ -109,18 +138,6 @@ def scrape_or_download(state):
     else:
         print("---PROCESS: MOVING ON WITH PYTUBE---")
         return "Download"
-
-
-def extract_transcription(state):
-    print("---PROCESS: EXTRACTING TRANSCRIPTION---")
-    video_url = state["video_url"]
-
-    full_transcription = transcription_scrapper._run(video_url)
-    parsed_transcription = ". ".join(full_transcription.values())
-    return {
-        "transcription_text": parsed_transcription,
-        "full_transcription": full_transcription
-    }
 
 
 def init_vectorstore(state):
