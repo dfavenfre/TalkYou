@@ -82,7 +82,7 @@ export LANGCHAIN_API_KEY=<insert-your-own-api-key> # required
 docker compose up --build
 ```
 
-Once the 'health check' API endpoint signals that all components of the network are up and running, navigate to the following links to access both the application and backend post-get service:
+Once 'base' Whisper model is downloaded and the 'health check' API endpoint signals that all components of the network are up and running, navigate to the following links to access both the application and backend post-get service:
 
 - [TalkYou Application](http://localhost:8501/)
 - [FastAPI Swagger UI](http://localhost:8000/docs#/)
@@ -119,11 +119,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 - [Tolga Şakar](https://www.linkedin.com/in/tolga-%C5%9Fakar-575b86136/)
 - [Gülsüm Budakoğlu](https://www.linkedin.com/in/gulsumb/)
-
-## Acknowledgments
-
-- List any libraries, tools, or resources you'd like to acknowledge
-- Give credit to inspirations or related projects
 
 ## Support
 
