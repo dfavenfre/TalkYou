@@ -64,10 +64,10 @@ def check_video_length(state):
         length = video_length_checker._run(video_url)
         print(F"---PROCESS: VIDEO LENGTH IS -> {length}")
 
-        if length >= 20:
-            return {"video_length": ">20"}
+        if length >= 10:
+            return {"video_length": ">10"}
         else:
-            return {"video_length": "<20"}
+            return {"video_length": "<10"}
 
     except Exception as err:
         raise Exception(f"Something went wrong during scrapping -> {err}")
@@ -76,7 +76,7 @@ def check_video_length(state):
 def selenium_or_pytube(state):
     video_length = state["video_length"]
 
-    if video_length == ">20":
+    if video_length == ">10":
         print("---PROCESS: MOVING ON WITH SELENIUM---")
         return "Selenium"
 
