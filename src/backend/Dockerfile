@@ -35,18 +35,13 @@ WORKDIR /app
 
 # Create and activate a virtual environment
 RUN python3 -m venv /venv
-ENV PATH="/venv/bin:$PATH" \
-    OPENAI_API_KEY=<ADD-YOUR-OWN-OPENAI-API-KEY> \
-    LANGCHAIN_API_KEY=<ADD-YOUR-OWN-LANGSMITH-API-KEY> \
-    LANGCHAIN_ENDPOINT=https://api.smith.langchain.com \
-    LANGCHAIN_TRACING_V2=true
+ENV PATH="/venv/bin:$PATH"
 
 # Upgrade pip and install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip \
     && pip install git+https://github.com/openai/whisper.git \
     && pip install --no-cache-dir -r requirements.txt
-
 
 # Copy the application files
 COPY . /app
