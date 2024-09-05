@@ -22,7 +22,6 @@ import time
 import yaml
 import base64
 
-
 from pytube import YouTube
 from pytube.innertube import _default_clients
 from pytube import cipher
@@ -550,7 +549,7 @@ def create_empty_vectorstore(
 
 
 def create_vectorstore_index(
-        documents: Union[str, List[str]],
+        documents: Union[str, List[str], Any],
         vectorstore: FAISS,
 ) -> FAISS:
     """
@@ -619,14 +618,22 @@ def search_timestamp(
     relevant_document = retriever.similarity_search(chat_message, k=1)
     found_timestamp = relevant_document[0].metadata["timestamp"]
 
-    minutes, seconds = map(int, found_timestamp.split(":"))
-    total_seconds = minutes * 60 + seconds
-    return round(total_seconds)
+    if found_timestamp.count(":") == 1:
+        minutes, seconds = map(int, found_timestamp.split(":"))
+        total_seconds = minutes * 60 + seconds
+        return round(total_seconds)
+
+    elif found_timestamp.count(":") > 1:
+        hours, minutes, seconds = map(int, found_timestamp.split(":"))
+        total_seconds = hours * 3600 + minutes * 60 + seconds
+        return round(total_seconds)
+    else:
+        return found_timestamp
 
 
 def take_screenshot(
         video_url: str
-) -> Union[str, AnyStr, base64]:
+) -> Union[str, AnyStr, Any]:
     """
     Captures a screenshot of a video from the given URL and returns it as a base64 encoded string.
 
@@ -664,10 +671,6 @@ def take_screenshot(
 
     except TimeoutException as err:
         print(f"TimeoutException: {err}")
-
-
-
-
 
 
 class YouTubeConverter:
@@ -812,6 +815,7 @@ class YouTubeConverter:
         final_filename = "audio_file_to_convert"
         return self.video_to_audio(url, final_filename)
 
+
 class WhisperTranscriber:
     """
     A class responsible for transcribing audio files into text using Whisper.
@@ -841,7 +845,7 @@ class WhisperTranscriber:
 
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.whisper_model = whisper.load_model("base", device=self.device)
+        self.whisper_model = whisper.load_model("base", in_memory=True, device=self.device)
 
     def transcribe(self, audio_file):
         """
@@ -859,8 +863,7 @@ class WhisperTranscriber:
         """
         result = self.whisper_model.transcribe(audio_file)
         result_segments = result['segments']
-        print(result_segments)
-        return self.format_segments(result_segments)
+        return self.format_segments_into_dictionary(result_segments)
 
     @staticmethod
     def format_segments(result_segments):
@@ -888,6 +891,17 @@ class WhisperTranscriber:
             formatted_output.append(formatted_text)
 
         return "\n".join(formatted_output)
+
+    @staticmethod
+    def format_segments_into_dictionary(
+            result_segments: Any
+    ) -> Dict[str, str]:
+
+        formatted_output = {}
+        for segment in result_segments:
+            timestamp = str(round(segment["start"])).replace(".", ":")
+            formatted_output[str(timestamp)] = segment["text"]
+        return formatted_output
 
     @staticmethod
     def format_time_milliseconds(seconds):
@@ -924,20 +938,3 @@ class WhisperTranscriber:
         with open(output_file_path, 'w') as output_file:
             output_file.write(formatted_result)
         print(f"Formatted result saved to {output_file_path}")
-
-# Main function to demonstrate the use of the classes
-def main():
-    youtube_converter = YouTubeConverter(destination=".")
-    whisper_transcriber = WhisperTranscriber()
-
-    url = input("Enter the Link of YouTube Video to be converted: ")
-    audio_file = youtube_converter.convert(url)
-    formatted_result = whisper_transcriber.transcribe(audio_file)
-    output_file_path = './transcribed_text.txt'
-    whisper_transcriber.dump_into_txt(formatted_result, output_file_path)
-
-# Run the main function
-if __name__ == "__main__":
-    main()
-
-
