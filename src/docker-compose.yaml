@@ -33,6 +33,7 @@ services:
       - app
     container_name: talkyou-backend
     hostname: backend
+    runtime: nvidia
     deploy:
       resources:
         limits:
@@ -41,6 +42,9 @@ services:
         reservations:
           cpus: "3"
           memory: "3G"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 networks:
   app:
