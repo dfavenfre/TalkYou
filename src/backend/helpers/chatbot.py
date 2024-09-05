@@ -78,7 +78,7 @@ workflow.add_conditional_edges(
         "Download": "download_with_pytube"
     }
 )
-
+workflow.add_edge("download_with_pytube", "create_vectorstore")
 workflow.add_edge("extract_transcription", "create_vectorstore")
 workflow.add_edge("create_vectorstore", END)
 
