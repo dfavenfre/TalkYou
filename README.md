@@ -45,6 +45,21 @@ utilized with metadata filtering.
 - Chat with YouTube videos (Automized RAG-Pipeline)
 - Image retrieval based on user queries (Metadata Filtering)
 
+### Upcoming Features
+
+1. **Corrective RAG (Agent)**
+   - Implement an advanced Retrieval-Augmented Generation system with self-correction capabilities.
+
+2. **Enhanced Transcript Functionality**
+   - Show the full transcript (Frontend/UX improvement)
+   - Enable downloading of transcript as PDF (Frontend/UX & Backend/FastAPI)
+
+3. **Text-To-Speech Integration (Backend/FastAPI)**
+   - Add capability to convert text responses to speech for a more interactive experience.
+
+4. **Local LLM Support (Backend DockerFile)**
+   - Integrate support for running Language Models locally, reducing dependency on external APIs.
+
 ## Technology Stack
 - Backend: FastAPI running in a containerized Docker image with Nvidia CUDA support
 - Frontend: Streamlit (Python-based lightweight and fast framework) containerized Docker image
