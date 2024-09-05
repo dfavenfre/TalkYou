@@ -29,6 +29,7 @@ however, to clarify;
       * Scrape Transcription 
     * If transcription is not available: 
         * Download With Pytube
+        * Transcribe MP3 with Whisper
     * After either downloading or scraping: 
         * Create Vectorstore
 
