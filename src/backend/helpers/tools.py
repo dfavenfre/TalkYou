@@ -60,7 +60,7 @@ from langchain_core.tools import tool
 from langchain.tools import BaseTool, StructuredTool, tool
 from helpers.constants import service, options, driver
 from langchain_core.tracers.context import tracing_v2_enabled
-from typing import List, Optional, Tuple, Any, Dict, Sequence, Type, Union
+from typing import List, Optional, Tuple, Any, Dict, Sequence, Type, Union, AnyStr
 from pydantic import BaseModel, Field
 from operator import itemgetter
 from datetime import datetime
@@ -145,12 +145,16 @@ class VideoLengthTool(BaseTool):
             )
 
             if isinstance(video_length, WebElement):
-                unparsed_length = float(video_length.text.replace(":", "."))
-                return unparsed_length
+                if video_length.text.count(":") == 1:
+                    unparsed_length = float(video_length.text.replace(":", "."))
+                    return unparsed_length
+                else:
+                    unparsed_length = int(video_length.text.replace(":", ""))
+                    return unparsed_length
 
         except TimeoutException as e:
             print(f"TimeoutException: {e}")
-            return False
+            return 19
 
 
 class TranscriptionScrapperTool(BaseTool):
@@ -255,7 +259,7 @@ class ScreenshotTool(BaseTool):
             self,
             video_url: str,
             run_manager: Optional[CallbackManagerForToolRun] = None
-    ) -> Union[str, bytes, base64]:
+    ) -> Union[str, bytes, AnyStr, Any]:
         try:
             driver.get(video_url)
             video_element = WebDriverWait(driver, 10).until(
