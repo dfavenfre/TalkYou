@@ -2,7 +2,8 @@
 
 TalkYou is an innovative open-source project designed to enable users to have a chat with any YouTube video. It brings you a customized chatbot experience, not only with the ability to chat but also with an amazing feature of image retrieval based on your queries.
 
-[streamlit-talkyou-2024-09-05-12-09-75.webm](https://github.com/user-attachments/assets/d01112b2-0d13-4de0-aa14-b96559c3e6f6)
+[![Demo Walkthrough](https://img.youtube.com/vi/9NyWLm-p4LI/0.jpg)](https://www.youtube.com/watch?v=9NyWLm-p4LI)
+
 
 ## LangGraph Schema
 We utilize both LangChain and LangGraph frameworks as the back-bone of this project to achieve conditional tool calling capabilities. The LangGraph schema below depicts the skeleton of the processes taking place under the hood,
